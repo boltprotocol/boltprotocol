@@ -1,0 +1,88 @@
+<!doctype html>
+<!--[if IE 9]>
+<html class="lt-ie10" lang="en"> <![endif]-->
+<html class="no-js" lang="en" data-useragent="Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Trident/6.0)">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{page.title}}</title>
+
+  <meta name="description"
+        content="Bolt Protocol - a highly efficient, lightweight messaging protocol for databases"/>
+
+  <meta name="copyright" content="Creative Commons 3.0 Attribution-ShareAlike"/>
+
+  <link rel="stylesheet" href="{{"/css/foundation.css" | prepend: site.baseurl }}"/>
+  <link rel="stylesheet" href="{{"/css/asciidoctor.css" | prepend: site.baseurl }}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="{{"/css/coderay.css" | prepend: site.baseurl }}"/>
+  <script src="{{"/js/vendor/modernizr.js" | prepend: site.baseurl }}"></script>
+  <script src="{{"/js/toc.js" | prepend: site.baseurl }}"></script>
+</head>
+<body>
+
+<nav class="top-bar" data-topbar>
+  <ul class="title-area">
+    <!-- Title Area -->
+    <li class="name">
+      <h1><a href="{{"/" | prepend: site.baseurl }}">Bolt Protocol</a></h1>
+    </li>
+    <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>
+  </ul>
+
+  <section class="top-bar-section">
+    <ul class="left">
+      <li class="has-dropdown name">
+        <h1>
+          <a href="{{"/v1/" | prepend: site.baseurl }}">Version 1</a>
+        </h1>
+        <ul class="dropdown">
+          <li><a href="{{"/v1/#overview" | prepend: site.baseurl }}">Overview</a></li>
+          <li><a href="{{"/v1/#transport" | prepend: site.baseurl }}">Transport Layer</a></li>
+          <li><a href="{{"/v1/#messaging" | prepend: site.baseurl }}">Messaging</a></li>
+          <li><a href="{{"/v1/#serialization" | prepend: site.baseurl }}">Serialization</a></li>
+          <li><a href="{{"/v1/#examples" | prepend: site.baseurl }}">Examples</a></li>
+        </ul>
+      </li>
+    </ul>
+    <ul class="right hide-for-small">
+      <img src="{{"/images/boltprotocol.png" | prepend: site.basurl }}" style="height: 6rem;margin: 5px 5px 0 0;" />
+    </ul>
+  </section>
+</nav>
+
+<section role="main" class="scroll-container">
+  <div class="row">
+    <div class="small-12 columns" role="content">
+      <h1>{{page.title}}</h1>
+      {{content}}
+    </div>
+  </div>
+</section>
+
+<footer class="row">
+  <div class="large-12 columns">
+    <hr/>
+    <div class="row">
+      <div class="large-12 columns">
+        <p>Licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons 3.0 Attribution-ShareAlike</a>.</p>
+        <p>Originally authored by <a href="https://neo4j.com">Neo Technology, Inc.</a>, with modifications to original source for publishing and clarity.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="{{"/js/vendor/jquery.js" | prepend: site.baseurl }}"></script>
+<script src="{{"/js/foundation.min.js" | prepend: site.baseurl }}"></script>
+<script>
+  $(document).foundation();
+</script>
+<script src="{{"/js/vendor/jquery.js" | prepend: site.baseurl }}"></script>
+<script src="{{"/js/foundation/foundation.js" | prepend: site.baseurl }}"></script>
+<script>
+  $(document).foundation();
+  var doc = document.documentElement;
+  doc.setAttribute('data-useragent', navigator.userAgent);
+</script>
+</body>
+</html>
