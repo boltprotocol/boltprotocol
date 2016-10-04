@@ -1,26 +1,26 @@
-[[bolt-serialization]]
+[[serialization]]
 == Message Serialization
 === Overview
 
-This section discusses how messages and the Neo4j type system are represented by the protocol using a custom binary serialization format.
+This section discusses how messages and the database type system are represented by the protocol using a custom binary serialization format.
 
-For details on the layout and meaning of specific messages, see <<bolt-messaging,messaging>>.
+For details on the layout and meaning of specific messages, see <<messaging>>.
 
-[[bolt-type-system-mapping]]
+[[type-system-mapping]]
 .Types overview
 [cols="20,80",options="header",name="value-translation-table"]
 |=======================
-|Type                                           |Description
-|<<bolt-packstream-null,Null>>                   |Represents the absence of a value
-|<<bolt-packstream-booleans,Boolean>>            |Boolean true or false
-|<<bolt-packstream-ints,Integer>>                |64-bit signed integer
-|<<bolt-packstream-floats,Float>>                |64-bit floating point number
-|<<bolt-packstream-string,String>>               |Unicode string
-|<<bolt-packstream-lists,List>>                  |Ordered collection of values
-|<<bolt-packstream-maps,Map>>                    |Unordered, keyed collection of values
-|<<bolt-value-nodestruct,Node>>                  |A node in the graph with optional properties and labels
-|<<bolt-value-relstruct,Relationship>>           |A directed, typed connection between two nodes. Each relationship may have properties and always has an identity
-|<<bolt-value-pathstruct,Path>>                  |The record of a directed walk through the graph, a sequence of zero or more segments*. A path with zero segments consists of a single node.
+|Type                                  |Description
+|<<null,Null>>                   |Represents the absence of a value
+|<<booleans,Boolean>>            |Boolean true or false
+|<<ints,Integer>>                |64-bit signed integer
+|<<floats,Float>>                |64-bit floating point number
+|<<strings,String>>              |UTF-8 encoded strings
+|<<lists,List>>                  |Ordered collection of values
+|<<maps,Map>>                    |Unordered, keyed collection of values
+|<<node-structure,Node>>            |A node in the graph with optional properties and labels
+|<<rel-structure,Relationship>>     |A directed, typed connection between two nodes. Each relationship may have properties and always has an identity
+|<<path-structure,Path>>            |The record of a directed walk through the graph, a sequence of zero or more segments*. A path with zero segments consists of a single node.
 |=======================
 
 NOTE: A segment is the record of a single step traversal through a graph, encompassing a start node, a relationship traversed either forwards or backwards and an end node.
@@ -45,26 +45,26 @@ The size itself is either an 8-bit, 16-bit or 32-bit big-endian unsigned integer
 
 The diagram below illustrates the general layout for a sized value, here with a 16-bit size:
 
-image:packstream-sized.png[]
+image:images/packstream-sized.png[]
 
-[[bolt-packstream-null]]
+[[null]]
 === Null
 Null is always encoded using the single marker byte `0xC0`.
 
 .Absence of value - null
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: null
 
 C0
 ----
 
-[[bolt-packstream-booleans]]
+[[booleans]]
 === Booleans
 Boolean values are encoded within a single marker byte, using `0xC3` to denote true and `0xC2` to denote false.
 
 .Boolean true
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: true
 
@@ -72,14 +72,14 @@ C3
 ----
 
 .Boolean false
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: false
 
 C2
 ----
 
-[[bolt-packstream-ints]]
+[[ints]]
 === Integers
 Integer values occupy either 1, 2, 3, 5 or 9 bytes depending on magnitude and are stored as big-endian signed values.
 Several markers are designated specifically as `TINY_INT` values and can therefore be used to pass a small number in a single byte.
@@ -87,13 +87,13 @@ These markers can be identified by a zero high-order bit or by a high-order nibb
 
 The available encodings are illustrated below and each shows a valid representation for the decimal value 42, with marker bytes in green:
 
-image:packstream-integers.png[]
+image:images/packstream-integers.png[]
 
 Note that while encoding small numbers in wider formats is supported, it is generally recommended to use the most compact representation possible.
 The following table shows the optimal representation for every possible integer:
 
 .Simple integer
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: 1
 
@@ -101,7 +101,7 @@ Value: 1
 ----
 
 .Min integer
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: -9223372036854775808
 
@@ -109,7 +109,7 @@ CB 80 00 00  00 00 00 00  00
 ----
 
 .Max integer
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: 9223372036854775807
 
@@ -117,7 +117,7 @@ CB 7F FF FF  FF FF FF FF  FF
 ----
 
 .Suggested integer representations
-[cols=">,>,^",options="header",name="packstream-integer-range-table"]
+[cols=">,>,^",options="header",name="integer-range-table"]
 |=======================
 |Range Minimum               |Range Maximum              |Suggested representation
 |-9 223 372 036 854 775 808  |-2 147 483 649             |`INT_64`
@@ -131,7 +131,7 @@ CB 7F FF FF  FF FF FF FF  FF
 |=======================
 
 
-[[bolt-packstream-floats]]
+[[floats]]
 === Floating Point Numbers
 These are double-precision floating points for approximations of any number, notably for representing fractions and decimal numbers.
 Floats are encoded as a single `0xC1` marker byte followed by 8 bytes, formatted according to the IEEE 754 floating-point "double format" bit layout.
@@ -143,7 +143,7 @@ Bits 62-52 (the bits that are selected by the mask `0x7ff0000000000000`) represe
 Bits 51-0 (the bits that are selected by the mask `0x000fffffffffffff`) represent the significand (sometimes called the mantissa) of the number.
 
 .Simple floating point
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: 1.1
 
@@ -151,20 +151,20 @@ C1 3F F1 99 99 99 99 99 9A
 ----
 
 .Negative floating point
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: -1.1
 
 C1 BF F1 99 99 99 99 99 9A
 ----
 
-[[bolt-packstream-string]]
+[[strings]]
 === String
 String data is represented as UTF-8 encoded binary data.
 Note that sizes used for string are the byte counts of the UTF-8 encoded data, not the character count of the original string.
 
 .String markers
-[cols="^20,<50,<30",options="header",name="packstream-string-marker-table"]
+[cols="^20,<50,<30",options="header",name="string-marker-table"]
 |=======================
 |Marker         |Size                                        |Maximum data size
 |`0x80`..`0x8F` |contained within low-order nibble of marker |15 bytes
@@ -179,19 +179,19 @@ The encoded data then immediately follows the marker.
 The example below shows how the string "Hello" would be represented:
 
 // TODO: Convert this to a code-segment that can be tested
-image:packstream-tinystring.png[]
+image:images/packstream-tinystring.png[]
 
 ==== Regular Strings
 For encoded string containing 16 bytes or more, the marker `0xD0`, `0xD1` or `0xD2` should be used, depending on scale.
 This marker is followed by the size and the UTF-8 encoded data as in the example below:
 
 // TODO: Convert this to a code-segment that can be tested
-image:packstream-string.png[]
+image:images/packstream-string.png[]
 
 ==== Examples
 
 .Tiny string
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: "a"
 
@@ -199,7 +199,7 @@ Value: "a"
 ----
 
 .Regular string
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: "abcdefghijklmnopqrstuvwxyz"
 
@@ -208,7 +208,7 @@ D0 1A 61 62  63 64 65 66  67 68 69 6A  6B 6C 6D 6E
 ----
 
 .String with special characters
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: "En å flöt över ängen"
 
@@ -216,14 +216,14 @@ D0 18 45 6E  20 C3 A5 20  66 6C C3 B6  74 20 C3 B6
 76 65 72 20  C3 A4 6E 67  65 6E
 ----
 
-[[bolt-packstream-lists]]
+[[lists]]
 === Lists
 Lists are heterogeneous sequences of values and permit a mixture of types within the same list.
 The size of a list denotes the number of items within that list, not the total packed byte size.
 The markers used to denote a list are described in the table below:
 
 .List markers
-[cols="^20,<50,<30",options="header",name="packstream-list-marker-table"]
+[cols="^20,<50,<30",options="header",name="list-marker-table"]
 |=======================
 |Marker         |Size                                        |Maximum list size
 |`0x90`..`0x9F` |contained within low-order nibble of marker |15 bytes
@@ -243,7 +243,7 @@ This marker is followed by the size and list items, serialized in order.
 ==== Examples
 
 .Empty list
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: []
 
@@ -251,7 +251,7 @@ Value: []
 ----
 
 .Tiny list
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: [1,2,3]
 
@@ -259,7 +259,7 @@ Value: [1,2,3]
 ----
 
 .Regular list
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: [1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6,7,8,9,0]
 
@@ -267,7 +267,7 @@ D4 14 01 02  03 04 05 06  07 08 09 00  01 02 03 04
 05 06 07 08  09 00
 ----
 
-[[bolt-packstream-maps]]
+[[maps]]
 === Maps
 Maps are sized sequences of pairs of keys and values and permit a mixture of types within the same map.
 The size of a map denotes the number of pairs within that map, not the total packed byte size.
@@ -276,7 +276,7 @@ Though if duplicate keys are sent, this is a violation of the bolt protocol and 
 The markers used to denote a map are described in the table below:
 
 .Map markers
-[cols="^20,<50,<30",options="header",name="packstream-map-marker-table"]
+[cols="^20,<50,<30",options="header",name="map-marker-table"]
 |=======================
 |Marker         |Size                                        |Maximum map size
 |`0xA0`..`0xAF` |contained within low-order nibble of marker |15 entries
@@ -296,7 +296,7 @@ This marker is followed by the size and map entries, serialised in key-value-key
 ==== Examples
 
 .Empty map
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: {}
 
@@ -304,7 +304,7 @@ A0
 ----
 
 .Tiny map
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: {"a":1}
 
@@ -312,7 +312,7 @@ A1 81 61 01
 ----
 
 .Regular map
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: {"a":1,"b":1,"c":3,"d":4,"e":5,"f":6,"g":7,"h":8,"i":9,"j":0,"k":1,"l":2,"m":3,"n":4,"o":5,"p":6}
 
@@ -322,14 +322,14 @@ D8 10 81 61  01 81 62 01  81 63 03 81  64 04 81 65
 70 06
 ----
 
-[[bolt-packstream-structures]]
+[[structures]]
 === Structures
 Structures represent composite values and consist, beyond the marker, of a single byte signature followed by a sequence of fields, each an individual value.
 The size of a structure is measured as the number of fields, not the total packed byte size.
 The markers used to denote a structure are described in the table below:
 
 .Structure markers
-[cols="^20,<50,<30",options="header",name="packstream-structure-marker-table"]
+[cols="^20,<50,<30",options="header",name="structure-marker-table"]
 |=======================
 |Marker         |Size                                        |Maximum structure size
 |`0xB0`..`0xBF` |contained within low-order nibble of marker |15 fields
@@ -339,7 +339,7 @@ The markers used to denote a structure are described in the table below:
 
 ==== Signature
 The signature byte is used to identify the type or class of the structure.
-Refer to the <<bolt-value-structs,Value Structures>> and <<bolt-message-structs,Message Structures>> for structures used in the protocol.
+Refer to the <<value-structures,Value Structures>> and <<messages,Message Structures>> for structures used in the protocol.
 
 Signature bytes may hold any value between 0 and +127. Bytes with the high bit set are reserved for future expansion.
 
@@ -356,7 +356,7 @@ This marker is followed by the size, the signature byte and the actual fields, s
 Assuming a struct with the signature `0x01` and three fields with values 1,2,3:
 
 .Tiny structure
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: Struct (signature=0x01) { 1,2,3 }
 
@@ -364,7 +364,7 @@ B3 01 01 02 03
 ----
 
 .Regular structure
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: Struct (signature=0x01) { 1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6 }
 
@@ -372,15 +372,15 @@ DC 10 01 01  02 03 04 05  06 07 08 09  00 01 02 03
 04 05 06
 ----
 
-[[bolt-value-structs]]
+[[value-structures]]
 === Graph Type Stuctures
 
-A number of key Neo4j types are represented as <<bolt-packstream-structures,structures>>.
+A number of complex database types are represented as <<structures>>.
 These include _nodes_, _relationships_ and _paths_.
 
-[[bolt-value-nodestruct]]
+[[node-structure]]
 ==== Node
-A Node represents a node from a Neo4j graph and consists of a unique identifier (within the scope of its origin graph), a list of labels and a map of properties. The general serialised structure is as follows:
+A Node represents a node from a labeled property graph and consists of a unique identifier (within the scope of its origin graph), a list of labels and a map of properties. The general serialised structure is as follows:
 
 [source,bolt_value_struct]
 ----
@@ -391,9 +391,9 @@ Node (signature=0x4E) {
 }
 ----
 
-[[bolt-value-relstruct]]
+[[rel-structure]]
 ==== Relationship
-A Relationship represents a relationship from a Neo4j graph and consists of a unique identifier (within the scope of its origin graph), identifiers for the start and end nodes of that relationship, a type and a map of properties. The general serialised structure is as follows:
+A Relationship represents a relationship from a labeled property graph and consists of a unique identifier (within the scope of its origin graph), identifiers for the start and end nodes of that relationship, a type and a map of properties. The general serialised structure is as follows:
 
 [source,bolt_value_struct]
 ----
@@ -406,7 +406,7 @@ Relationship (signature=0x52) {
 }
 ----
 
-[[bolt-value-pathstruct]]
+[[path-structure]]
 ==== Path
 A Path is a sequence of alternating nodes and relationships corresponding to a walk in the graph.
 The path always begins and ends with a node.
@@ -477,7 +477,7 @@ where the following is implied:
 - `S'`: [0]
 
 
-[[bolt-value-unboundrelstruct]]
+[[unbound-rel-structure]]
 ==== UnboundRelationship
 An UnboundRelationship represents a relationship relative to a separately known start point and end point.
 The general serialised structure is as follows:
@@ -495,9 +495,9 @@ UnboundRelationship (signature=0x72) {
 
 These are all the marker bytes:
 
-[[bolt-packstream-markers]]
+[[markers]]
 .Marker table
-[cols="^15,^15,^15,<55",options="header",name="bolt-packstream-marker-table"]
+[cols="^15,^15,^15,<55",options="header",name="marker-table"]
 |=======================
 |Marker         |Binary     |Type          |Description
 |`0x00`..`0x7F` |`0xxxxxxx` |`+TINY_INT`   |Integer 0 to 127

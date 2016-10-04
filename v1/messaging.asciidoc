@@ -1,11 +1,11 @@
-[[bolt-messaging]]
+[[messaging]]
 == Messaging layer
 
 This section discusses the semantic meaning and layout of protocol messages.
-For details on how Neo4j types are represented in binary form, see <<bolt-serialization,serialization>>.
+For details on how database types are represented in binary form, see <<serialization>>.
 
-Clients may send request messages at any time after a session is <<bolt-message-structs-initialize,initialized>>.
-Clients may <<bolt-messaging-pipelining,pipeline>> requests, sending multiple requests together.
+Clients may send request messages at any time after a session is <<message-init,initialized>>.
+Clients may <<messaging-pipelining,pipeline>> requests, sending multiple requests together.
 
 Servers must fully respond to each request before the next request is processed and processing of requests within a session must be done in the same order in which the requests.
 
@@ -18,21 +18,21 @@ For example, `RECORD` messages are classed as detail messages and `SUCCESS` mess
 
 The diagrams below illustrates a basic exchange wherein the client sends a request message and receives a series of response messages.
 
-image:simple-exchange.png[]
+image:images/simple-exchange.png[]
 
 === Initialization
 
-Before a session can be used to <<bolt-message-structs-run,run>> queries, it must be <<bolt-message-structs-initialize,initialized>>.
-The `INIT` message should be sent by the client as the first message it sends after <<bolt-handshake,negotiating
+Before a session can be used to <<message-run,run>> queries, it must be <<message-init,initialized>>.
+The `INIT` message should be sent by the client as the first message it sends after <<handshake,negotiating
 protocol version>>.
 
-[[bolt-messaging-pipelining]]
+[[messaging-pipelining]]
 === Pipelining
 
 The client is not required to wait for a response before sending more messages.
 Sending multiple messages together like this is called pipelining:
 
-image:pipelining.png[]
+image:images/pipelining.png[]
 
 For performance reasons, it is recommended that clients use pipelining as much as possible.
 Through pipelining, multiple messages can be transmitted together in the same network package, significantly reducing latency and increasing throughput.
@@ -40,42 +40,41 @@ Through pipelining, multiple messages can be transmitted together in the same ne
 TIP: A common technique is to buffer outgoing messages on the client until the last possible moment, such as when a
 commit is issued or a result is read by the application, and then sending all messages in the buffer together.
 
+[[failure-handling]]
 === Failure handling
 
 Because the protocol leverages pipelining, the client and the server need to agree on what happens when a failure
 occurs, otherwise messages that were sent assuming no failure would occur might have unintended effects.
 
 When requests fail on the server, the server will send the client a `FAILURE` message.
-The client must acknowledge the `FAILURE` message by sending an `RESET` message to the server.
-Until the server receives the `RESET` message, it will send an `IGNORED` message in response to any other message from by the client, including messages that were sent in a pipeline.
-The `RESET` clears the pending failure state, disposes of any outstanding records and rolls back the current transaction (if any).
+The client must acknowledge the `FAILURE` message by sending an `ACK_FAILURE` message to the server.
+Until the server receives the `ACK_FAILURE` message, it will send an `IGNORED` message in response to any other message from the client, including messages that were sent in a pipeline.
 
-The diagram below illustrates a typical flow involving `RESET` messages:
+The diagram below illustrates a typical flow involving `ACK_FAILURE` messages:
 
-image:failure-reset.png[]
+image:images/failure-ack.png[]
 
 Here, the original failure is acknowledged immediately by the client, allowing the subsequent RUN to be actioned as expected.
 
 This second diagram shows a sequence where a pair of request messages are sent together:
 
-image:failure-optimistic.png[]
+image:images/failure-optimistic.png[]
 
 Here, the client optimistically sends a pair of messages. The first of these fails and the second is consequently `IGNORED`.
 Once the client acknowledges the failure, it is then able to resend a corrected RUN message.
 
 
-[[bolt-message-structs]]
+[[messages]]
 === Messages
 
-Protocol messages are represented as <<bolt-packstream-structures,serialized structures>>.
+Protocol messages are represented as <<structures,serialized structures>>.
 
-[[bolt-message-structs-initialize]]
+[[message-init]]
 ==== INIT
 
 The `INIT` message is a client message used once to initialize the session.
-This message is always the first message the client sends after <<bolt-handshake,negotiating protocol version>>.
-Sending any message other than `INIT` as the first message to the server will result in a `FAILURE` and the
-server closing the connection.
+This message is always the first message the client sends after <<handshake,negotiating protocol version>>.
+Sending any message other than `INIT` as the first message to the server will result in a `FAILURE`. As described in <<failure-handling>> the client must acknowledge failures using `ACK_FAILURE`, after which `INIT` may be reattempted.
 
 All parameters in the `INIT` message are required.
 
@@ -92,7 +91,7 @@ InitMessage (signature=0x01) {
 ----
 
 .Example
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: INIT "MyClient/1.0" { "scheme": "basic", "principal": "neo4j", "credentials": "secret"}
 
@@ -107,13 +106,13 @@ B1 01 8C 4D  79 43 6C 69  65 6E 74 2F  31 2E 30 A3
 |=======================
 |Parameter   |Description
 |clientName  |A name and version for the client, if the user has allowed usage data collection, this is used to track popular clients. Example: "MyClient/1.0"
-|authToken   |An authorization token used to authenticate to the database. The token must contain either just the entry { "scheme" : "none" } or the keys scheme, principal, and credentials. Example { "scheme": "basic", "principal": "neo4j", "credentials": "secret"}". If no scheme is provided, it defaults to "none".
+|authToken   |An authorization token used to authenticate to the database. The token must contain either just the entry { "scheme" : "none" } or the keys scheme, principal, and credentials. Example { "scheme": "basic", "principal": "user", "credentials": "secret"}". If no scheme is provided, it defaults to "none".
 |=======================
 
-[[bolt-message-structs-run]]
+[[message-run]]
 ==== RUN
 
-The `RUN` message is a client message used to pass a Cypher statement for execution on the server. It has the following structure:
+The `RUN` message is a client message used to pass a statement for execution on the server. It has the following structure:
 
 [source,bolt_request_message_struct]
 ----
@@ -123,6 +122,8 @@ RunMessage (signature=0x10) {
 }
 ----
 
+NOTE: The content and format of the statement string is dependent on the server, and the Bolt Protocol makes no assumption about this.
+
 On receipt of a `RUN` message, the server will start a new job by executing the statement with the parameters supplied.
 If successful, the subsequent response will consist of a single `SUCCESS` message; if not, a `FAILURE` response will be sent instead.
 A successful job will always produce a result stream which must then be explicitly consumed (via `PULL_ALL` or `DISCARD_ALL`), even if empty.
@@ -130,7 +131,7 @@ A successful job will always produce a result stream which must then be explicit
 Depending on the statement you are executing, additional metadata may be returned in both the `SUCCESS` message from the `RUN`, as well as in the final `SUCCESS` after the stream has been consumed.
 It is up to the statement you are running to determine what meta data to return.
 Notably, most queries will contain a 'fields' metadata section in the `SUCCESS` message for the `RUN` statement, which lists the result record field names, and a `result_available_after` section measuring the number of milliseconds it took for the results to be available for consumption.
-We list further examples of meta data in the <<bolt-examples,examples section>>.
+We list further examples of meta data in the <<examples,examples section>>.
 
 In the case where a previous result stream has not yet been fully consumed, an attempt to `RUN` a new job will trigger a `FAILURE` response.
 
@@ -142,13 +143,14 @@ If an unacknowledged failure is pending from a previous exchange, the server wil
 - `FAILURE {"code": ..., "message": ...}` if the request was malformed or if a statement may not be executed at this time
 
 .Example
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: RUN "RETURN 1 AS num" {}
 
 B2 10 8F 52  45 54 55 52  4E 20 31 20  41 53 20 6E  75 6D A0
 ----
 
+[[message-discard-all]]
 ==== DISCARD_ALL
 
 The `DISCARD_ALL` message is a client message used to discard all remaining items from the active result
@@ -170,13 +172,14 @@ If an unacknowledged failure is pending from a previous exchange, the server wil
 - `FAILURE {"code": ..., "message": ...}` if no result stream is currently available
 
 .Example
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: DISCARD_ALL
 
 B0 2F
 ----
 
+[[message-pull-all]]
 ==== PULL_ALL
 
 The `PULL_ALL` message is a client message used to retrieve all remaining items from the active result stream.
@@ -199,14 +202,46 @@ If an unacknowledged failure is pending from a previous exchange, the server wil
 - `FAILURE {"code": ..., "message": ...}` if no result stream is currently available or if retrieval fails
 
 .Example
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: PULL_ALL
 
 B0 3F
 ----
 
-[[bolt-message-structs-reset]]
+[[message-ack-failure]]
+==== ACK_FAILURE
+
+The `ACK_FAILURE` message is a client message used to acknowledge a failure the server has sent.
+
+The following actions are performed by `ACK_FAILURE`:
+
+NOTE: In some cases, it may be preferable to use `RESET` after a failure, to clear
+the entire state of the connection.
+
+- clear any outstanding `FAILURE` state
+
+See <<examples-ack-failure>> for an example.
+
+[source,bolt_request_message_struct]
+----
+AckFailureMessage (signature=0x0E) {
+}
+----
+
+.Response
+- `SUCCESS {}` if the session was successfully reset
+- `FAILURE {"code": ..., "message": ...}` if there is no failure waiting to be cleared
+
+.Example
+[source,bolt_type]
+----
+Value: ACK_FAILURE
+
+B0 0E
+----
+
+[[message-reset]]
 ==== RESET
 
 The `RESET` message is a client message used to return the current session to a "clean" state.
@@ -223,9 +258,9 @@ The following actions are performed by `RESET`:
 - dispose of any outstanding result records
 - rollback the current transaction (if any)
 
-See <<bolt-examples-reset>> for example usage.
+See <<examples-reset>> for example usage.
 
-Also, see <<bolt-message-structs-ack-failure>> for a message that only clears `FAILURE` state
+Also, see <<message-ack-failure>> for a message that only clears `FAILURE` state
 
 
 [source,bolt_request_message_struct]
@@ -239,47 +274,14 @@ ResetMessage (signature=0x0F) {
 - `FAILURE {"code": ..., "message": ...}` if a reset is not currently possible
 
 .Example
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: RESET
 
 B0 0F
 ----
 
-[[bolt-message-structs-ack-failure]]
-==== ACK_FAILURE
-
-The `ACK_FAILURE` message is a client message used to acknowledge a failure the server has sent.
-It is similar to `RESET`, but it does not roll back open transactions, nor does it interrupt running operations.
-
-This can be a better option than `RESET` in cases where a client wants to explicitly call "ROLLBACK" in case of failure.
-A good example of this is in a shell environment, where an error should cause all subsequent statements to fail until the transaction is rolled back.
-
-The following actions are performed by `ACK_FAILURE`:
-
-- clear any outstanding `FAILURE` state
-- dispose of any outstanding result records
-
-See <<bolt-examples-ack-failure>> for an example.
-
-[source,bolt_request_message_struct]
-----
-AckFailureMessage (signature=0x0E) {
-}
-----
-
-.Response
-- `SUCCESS {}` if the session was successfully reset
-- `FAILURE {"code": ..., "message": ...}` if a reset is not currently possible
-
-.Example
-[source,bolt_packstream_type]
-----
-Value: ACK_FAILURE
-
-B0 0E
-----
-
+[[message-record]]
 ==== RECORD
 
 The `RECORD` message is a server detail message used to deliver data from the server to the client.
@@ -294,13 +296,14 @@ RecordMessage (signature=0x71) {
 ----
 
 .Example
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: RECORD [1,2,3]
 
 B1 71 93 01  02 03
 ----
 
+[[message-success]]
 ==== SUCCESS
 
 The `SUCCESS` message is a server summary message used to signal that a corresponding client message has been received and actioned as intended.
@@ -315,7 +318,7 @@ SuccessMessage (signature=0x70) {
 ----
 
 .Example
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: SUCCESS { "fields": ["name", "age"]}
 
@@ -323,6 +326,7 @@ B1 70 A1 86  66 69 65 6C  64 73 92 84  6E 61 6D 65
 83 61 67 65
 ----
 
+[[message-failure]]
 ==== FAILURE
 
 The `FAILURE` message is a server summary message used to signal that a corresponding client message has encountered an error while being processed.
@@ -336,7 +340,7 @@ FailureMessage (signature=0x7F) {
 ----
 
 `FAILURE` messages contain metadata providing details regarding the primary failure that has occurred.
-This metadata is a simple map containing a code and a message. These codes map to the standard Neo4j status codes.
+This metadata is a simple map containing a code and a message.
 
 When a `FAILURE` occurs, in most cases any open transaction will be rolled back.
 However, if the `FAILURE` is classified as a `client error`, the transaction will be left open and can be used again
@@ -345,7 +349,7 @@ This is mainly to support user-driven queries, where a database administrator ma
 we do not want a simple spelling mistake to roll it all back.
 
 .Example
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: FAILURE { "code": "Neo.ClientError.Statement.SyntaxError", "message": "Invalid syntax." }
 
@@ -356,6 +360,7 @@ B1 7F A2 84  63 6F 64 65  D0 25 4E 65  6F 2E 43 6C
 73 79 6E 74  61 78 2E
 ----
 
+[[message-ignored]]
 ==== IGNORED
 
 The `IGNORED` message is a server summary message used to signal that a corresponding client message has been ignored and not actioned.
@@ -373,7 +378,7 @@ For example, this will occur if the client optimistically sends a group of messa
 Note that the original `PULL_ALL` message was never processed by the server.
 
 .Example
-[source,bolt_packstream_type]
+[source,bolt_type]
 ----
 Value: IGNORED
 

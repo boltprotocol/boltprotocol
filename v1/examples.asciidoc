@@ -1,4 +1,4 @@
-[[bolt-examples]]
+[[examples]]
 == Examples
 
 This section contains concrete examples showing how to perform tasks using the full Bolt protocol stack.
@@ -139,7 +139,7 @@ Server: SUCCESS { "type": "r", "result_consumed_after": 12 }
 
 ----
 
-[[bolt-examples-reset]]
+[[examples-reset]]
 === Error handling with RESET
 
 This illustrates how the server behaves when a request fails, and shows how the server ignores incoming messages until a `RESET` message is received.
@@ -225,7 +225,7 @@ Server: SUCCESS { "fields": ["num"], "result_available_after": 12 }
   62 6C 65 5F  61 66 74 65  72 0C 00 00
 ----
 
-[[bolt-examples-ack-failure]]
+[[examples-ack-failure]]
 === Error handling with ACK_FAILURE
 
 This illustrates how to handle errors with `ACK_FAILURE`.

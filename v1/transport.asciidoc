@@ -1,9 +1,10 @@
-[[bolt-transport]]
+[[transport]]
 == Bolt Transport Layer
-The protocol supports both regular http://en.wikipedia.org/wiki/Network_socket[socket] and http://en.wikipedia.org/wiki/WebSocket[WebSocket] transport layers for sending and receiving messages.
-The transport layer is versioned along with the rest of the data protocol and is responsible for:
 
-* Negotiating Neo4j protocol version
+The protocol supports both regular http://en.wikipedia.org/wiki/Network_socket[socket] and http://en.wikipedia.org/wiki/WebSocket[WebSocket] transport layers for sending and receiving messages.
+The transport layer is versioned along with the rest of the Bolt Protocol and is responsible for:
+
+* Negotiating Bolt Protocol version
 * Establishing and terminating sessions
 * Routing messages from clients to specific sessions and back
 
@@ -12,26 +13,22 @@ The transport layer is versioned along with the rest of the data protocol and is
 Each connection to the server creates a new *session* that lives until that connection is closed.
 Each session is isolated and the server keep track of the current state, based on the requests and responses exchanged within that session.
 
-Neo4j uses _sticky sessions_, which means that, in a database cluster, each session is tied to one specific Neo4j instance.
-
 === Connecting
 
 To begin a new session, the client connects using either a regular socket or a WebSocket.
 Once connected, both transport layers can be treated identically.
 
-If Neo4j has been configured to enable encryption, +TLS+, the connections need to be made using a secure socket or a secure WebSocket.
+If the server has been configured to enable encryption, +TLS+, the connections need to be made using a secure socket or a secure WebSocket.
 
-A regular socket connection should be made to the host and port Neo4j has been configured to use for its regular socket listener.
+A regular socket connection should be made to the host and port the server has been configured to use for its regular socket listener.
 The default port for regular socket connections is *7687*.
-Similar configuration exists for the WebSocket listener.
-The default port for WebSocket connections is *7688*.
 
-IMPORTANT: If TLS is enabled, and no certificate has been specified, Neo4j will automatically generate a self-signed
+IMPORTANT: If TLS is enabled, and no certificate has been specified, the server should automatically generate a self-signed
  TLS certificate. It is vital that your database driver not simply accept any certificate without validating it. If
  you do not verify the certificate it is very simple to bypass the encryption. You should either ensure you have a
- valid signed certificate installed with Neo4j or that your application implements +trust on first use+.
+ valid signed certificate installed with the server or that your application implements +trust on first use+.
 
-[[bolt-handshake]]
+[[handshake]]
 === Handshake
 
 After connecting, a handshake takes place to establish which Bolt protocol version should be used for that connection.
@@ -73,10 +70,9 @@ Server: 00 00 00 00
 Server: <disconnect>
 ----
 
-=== Message framing
+=== Message transfer encoding
 
-The transport protocol uses a framing layer to wrap messages.
-
+Bolt encodings each message using a chunked transfer encoding.
 Each message is transferred as one or more `chunks` of data.
 Each chunk starts with a two-byte header, an unsigned big-endian 16-bit integer, representing the size of the chunk not including the header.
 A message can be divided across multiple chunks, allowing client and server alike to transfer large messages without having to determine the length of the entire message in advance.
