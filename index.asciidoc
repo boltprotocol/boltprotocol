@@ -68,6 +68,10 @@ This is a non-exhaustive list of known implementations:
 |Javascript driver library
 |link:v1/[Version 1]
 
+|https://github.com/codex-digital/cypher-stream[cypher-stream]
+|Javascript library handling cypher queries as node object streams
+|link:v1/[Version 1]
+
 |https://neo4j.com/developer/dotnet/#neo4j-dotnet-driver[Neo4j .NET Driver]
 |Microsoft .NET driver library
 |link:v1/[Version 1]
