@@ -60,6 +60,10 @@ This is a non-exhaustive list of known implementations:
 |Java driver library
 |link:v1/[Version 1]
 
+|https://neo4j.com/neo4j/neo4j-ogm[Neo4j OGM]
+|A Neo4j Object Graph Mapping Library for Java
+|link:v1/[Version 1]
+
 |https://neo4j.com/developer/javascript/#neo4j-javascript-driver[Neo4j Javascript Driver]
 |Javascript driver library
 |link:v1/[Version 1]
