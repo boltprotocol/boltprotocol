@@ -72,6 +72,10 @@ This is a non-exhaustive list of known implementations:
 |Python driver library
 |link:v1/[Version 1]
 
+|http://py2neo.org[py2neo]
+|Neo4j client library and toolkit for Python
+|link:v1/[Version 1]
+
 |https://github.com/neo4jrb/neo4j[Neo4j.rb]
 |Ruby driver library
 |link:v1/[Version 1]
