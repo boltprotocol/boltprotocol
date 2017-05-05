@@ -80,6 +80,10 @@ This is a non-exhaustive list of known implementations:
 |Neo4j client library and toolkit for Python
 |link:v1/[Version 1]
 
+|https://github.com/robinedwards/neomodel[neomodel]
+|A Python Object Graph Mapper (OGM)
+|link:v1/[Version 1]
+
 |https://github.com/neo4jrb/neo4j[Neo4j.rb]
 |Ruby driver library
 |link:v1/[Version 1]
