@@ -1,7 +1,19 @@
+baseurl: ""
+url: "https://boltprotocol.org"
+
 asciidoctor:
+  base_dir: :docdir
   attributes:
     - sectanchors
     - idseparator=_
     - source-highlighter=coderay
     - icons=font
     - hardbreaks!
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - LICENSE
+  - Rakefile
+  - README.md
+  - vendor

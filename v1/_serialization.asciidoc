@@ -188,6 +188,7 @@ This marker is followed by the size and the UTF-8 encoded data as in the example
 // TODO: Convert this to a code-segment that can be tested
 image:images/packstream-string.png[]
 
+[[string-examples]]
 ==== Examples
 
 .Tiny string
@@ -240,6 +241,7 @@ The items within the list are then serialised in order  immediately after the ma
 For lists containing 16 items or more, the marker `0xD4`, `0xD5` or `0xD6` should be used, depending on scale.
 This marker is followed by the size and list items, serialized in order.
 
+[[list-examples]]
 ==== Examples
 
 .Empty list
@@ -293,6 +295,7 @@ The items within the map are then serialised in key-value-key-value order immedi
 For maps containing 16 pairs or more, the marker `0xD8`, `0xD9` or `0xDA` should be used, depending on scale.
 This marker is followed by the size and map entries, serialised in key-value-key-value order.
 
+[[map-examples]]
 ==== Examples
 
 .Empty map
@@ -351,6 +354,7 @@ The marker is immediately followed by the signature byte and the field values.
 For structures containing 16 fields or more, the marker `0xDC` or `0xDD` should be used, depending on scale.
 This marker is followed by the size, the signature byte and the actual fields, serialised in order.
 
+[[struct-examples]]
 ==== Examples
 
 Assuming a struct with the signature `0x01` and three fields with values 1,2,3:
