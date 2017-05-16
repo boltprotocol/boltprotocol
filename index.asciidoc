@@ -44,7 +44,7 @@ This is a non-exhaustive list of known implementations:
 
 [cols="2a,3a,1a"]
 |===
-|https://cleishm.github.io/libneo4j-client[neo4j-client]
+|https://neo4j-client.net[neo4j-client]
 |Command Line Interface (CLI) / Shell client
 |link:v1/[Version 1]
 
