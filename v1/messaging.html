@@ -1,0 +1,651 @@
+<!doctype html>
+<!--[if IE 9]>
+<html class="lt-ie10" lang="en"> <![endif]-->
+<html class="no-js" lang="en" data-useragent="Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Trident/6.0)">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title></title>
+
+  <meta name="description"
+        content="Bolt Protocol - a highly efficient, lightweight messaging protocol for databases"/>
+
+  <link rel="canonical" href="https://boltprotocol.org/v1/messaging.html" />
+
+  <meta name="copyright" content="Creative Commons 3.0 Attribution-ShareAlike"/>
+
+  <link rel="stylesheet" href="/css/foundation.css"/>
+  <link rel="stylesheet" href="/css/asciidoctor.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/css/coderay.css"/>
+
+  <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/images/apple-touch-icon-57x57.png" />
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/images/apple-touch-icon-114x114.png" />
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/images/apple-touch-icon-72x72.png" />
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/images/apple-touch-icon-144x144.png" />
+  <link rel="apple-touch-icon-precomposed" sizes="60x60" href="/images/apple-touch-icon-60x60.png" />
+  <link rel="apple-touch-icon-precomposed" sizes="120x120" href="/images/apple-touch-icon-120x120.png" />
+  <link rel="apple-touch-icon-precomposed" sizes="76x76" href="/images/apple-touch-icon-76x76.png" />
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="/images/apple-touch-icon-152x152.png" />
+  <link rel="icon" type="image/png" href="/images/favicon-196x196.png" sizes="196x196" />
+  <link rel="icon" type="image/png" href="/images/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="/images/favicon-16x16.png" sizes="16x16" />
+  <link rel="icon" type="image/png" href="/images/favicon-128.png" sizes="128x128" />
+  <meta name="application-name" content="&nbsp;"/>
+  <meta name="msapplication-TileColor" content="#FFFFFF" />
+  <meta name="msapplication-TileImage" content="/images/mstile-144x144.png" />
+  <meta name="msapplication-square70x70logo" content="/images/mstile-70x70.png" />
+  <meta name="msapplication-square150x150logo" content="/images/mstile-150x150.png" />
+  <meta name="msapplication-wide310x150logo" content="/images/mstile-310x150.png" />
+  <meta name="msapplication-square310x310logo" content="/images/mstile-310x310.png" />
+
+  <script src="/js/vendor/modernizr.js"></script>
+  <script src="/js/toc.js"></script>
+</head>
+<body>
+
+<nav class="top-bar" data-topbar>
+  <ul class="title-area">
+    <!-- Title Area -->
+    <li class="name">
+      <h1><a href="/">Bolt Protocol</a></h1>
+    </li>
+    <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>
+  </ul>
+
+  <section class="top-bar-section">
+    <ul class="left">
+      <li class="has-dropdown name">
+        <h1>
+          <a href="/v1/">Version 1</a>
+        </h1>
+        <ul class="dropdown">
+          <li><a href="/v1/#overview">Overview</a></li>
+          <li><a href="/v1/#transport">Transport Layer</a></li>
+          <li><a href="/v1/#messaging">Messaging</a></li>
+          <li><a href="/v1/#serialization">Serialization</a></li>
+          <li><a href="/v1/#examples">Examples</a></li>
+        </ul>
+      </li>
+    </ul>
+    <ul class="right hide-for-small">
+      <img src="/images/boltprotocol.png" style="height: 6rem;margin: 5px 5px 0 0;" />
+    </ul>
+  </section>
+</nav>
+
+<section role="main" class="scroll-container">
+  <div class="row">
+    <div class="small-12 columns" role="content">
+      <h1></h1>
+      <div class="sect1">
+<h2 id="messaging"><a class="anchor" href="#messaging"></a>Messaging layer</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This section discusses the semantic meaning and layout of protocol messages.
+For details on how database types are represented in binary form, see <a href="#serialization">[serialization]</a>.</p>
+</div>
+<div class="paragraph">
+<p>Clients may send request messages at any time after a session is <a href="#message-init">initialized</a>.
+Clients may <a href="#messaging-pipelining">pipeline</a> requests, sending multiple requests together.</p>
+</div>
+<div class="paragraph">
+<p>Servers must fully respond to each request before the next request is processed and processing of requests within a session must be done in the same order in which the requests.</p>
+</div>
+<div class="paragraph">
+<p>Servers must ignore messages sent by the client after a failure occurs on the server, until the client has acknowledged the failure. See Failure &amp; Acknowledgement.</p>
+</div>
+<div class="paragraph">
+<p>For each request message sent, clients must anticipate receiving zero or more detail messages followed by exactly one summary message.
+The detail messages deliver the response content, while a summary message denotes the end of the response and any response metadata.
+Note that "detail" and "summary" are classifications of message, not specific message types.
+For example, <code>RECORD</code> messages are classed as detail messages and <code>SUCCESS</code> messages as summary messages.</p>
+</div>
+<div class="paragraph">
+<p>The diagrams below illustrates a basic exchange wherein the client sends a request message and receives a series of response messages.</p>
+</div>
+<div class="paragraph">
+<p><span class="image"><img src="images/simple-exchange.png" alt="simple exchange"></span></p>
+</div>
+<div class="sect2">
+<h3 id="initialization"><a class="anchor" href="#initialization"></a>Initialization</h3>
+<div class="paragraph">
+<p>Before a session can be used to <a href="#message-run">run</a> queries, it must be <a href="#message-init">initialized</a>.
+The <code>INIT</code> message should be sent by the client as the first message it sends after <a href="#handshake">negotiating
+protocol version</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="messaging-pipelining"><a class="anchor" href="#messaging-pipelining"></a>Pipelining</h3>
+<div class="paragraph">
+<p>The client is not required to wait for a response before sending more messages.
+Sending multiple messages together like this is called pipelining:</p>
+</div>
+<div class="paragraph">
+<p><span class="image"><img src="images/pipelining.png" alt="pipelining"></span></p>
+</div>
+<div class="paragraph">
+<p>For performance reasons, it is recommended that clients use pipelining as much as possible.
+Through pipelining, multiple messages can be transmitted together in the same network package, significantly reducing latency and increasing throughput.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+A common technique is to buffer outgoing messages on the client until the last possible moment, such as when a
+commit is issued or a result is read by the application, and then sending all messages in the buffer together.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="failure-handling"><a class="anchor" href="#failure-handling"></a>Failure handling</h3>
+<div class="paragraph">
+<p>Because the protocol leverages pipelining, the client and the server need to agree on what happens when a failure
+occurs, otherwise messages that were sent assuming no failure would occur might have unintended effects.</p>
+</div>
+<div class="paragraph">
+<p>When requests fail on the server, the server will send the client a <code>FAILURE</code> message.
+The client must acknowledge the <code>FAILURE</code> message by sending an <code>ACK_FAILURE</code> message to the server.
+Until the server receives the <code>ACK_FAILURE</code> message, it will send an <code>IGNORED</code> message in response to any other message from the client, including messages that were sent in a pipeline.</p>
+</div>
+<div class="paragraph">
+<p>The diagram below illustrates a typical flow involving <code>ACK_FAILURE</code> messages:</p>
+</div>
+<div class="paragraph">
+<p><span class="image"><img src="images/failure-ack.png" alt="failure ack"></span></p>
+</div>
+<div class="paragraph">
+<p>Here, the original failure is acknowledged immediately by the client, allowing the subsequent RUN to be actioned as expected.</p>
+</div>
+<div class="paragraph">
+<p>This second diagram shows a sequence where a pair of request messages are sent together:</p>
+</div>
+<div class="paragraph">
+<p><span class="image"><img src="images/failure-optimistic.png" alt="failure optimistic"></span></p>
+</div>
+<div class="paragraph">
+<p>Here, the client optimistically sends a pair of messages. The first of these fails and the second is consequently <code>IGNORED</code>.
+Once the client acknowledges the failure, it is then able to resend a corrected RUN message.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="messages"><a class="anchor" href="#messages"></a>Messages</h3>
+<div class="paragraph">
+<p>Protocol messages are represented as <a href="#structures">serialized structures</a>.</p>
+</div>
+<div class="sect3">
+<h4 id="message-init"><a class="anchor" href="#message-init"></a>INIT</h4>
+<div class="paragraph">
+<p>The <code>INIT</code> message is a client message used once to initialize the session.
+This message is always the first message the client sends after <a href="#handshake">negotiating protocol version</a>.
+Sending any message other than <code>INIT</code> as the first message to the server will result in a <code>FAILURE</code>. As described in <a href="#failure-handling">Failure handling</a> the client must acknowledge failures using <code>ACK_FAILURE</code>, after which <code>INIT</code> may be reattempted.</p>
+</div>
+<div class="paragraph">
+<p>All parameters in the <code>INIT</code> message are required.</p>
+</div>
+<div class="ulist">
+<div class="title">Response</div>
+<ul>
+<li>
+<p><code>SUCCESS {}</code> if initialization has completed successfully</p>
+</li>
+<li>
+<p><code>FAILURE {"code": &#8230;&#8203;, "message": &#8230;&#8203;}</code> if the request was malformed, or if initialization cannot be performed at this time, or if the authorization failed.</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_request_message_struct">InitMessage (signature=0x01) {
+    String clientName
+    Map&lt;String,Value&gt; authToken
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_type">Value: INIT &quot;MyClient/1.0&quot; { &quot;scheme&quot;: &quot;basic&quot;, &quot;principal&quot;: &quot;neo4j&quot;, &quot;credentials&quot;: &quot;secret&quot;}
+
+B1 01 8C 4D  79 43 6C 69  65 6E 74 2F  31 2E 30 A3
+86 73 63 68  65 6D 65 85  62 61 73 69  63 89 70 72
+69 6E 63 69  70 61 6C 85  6E 65 6F 34  6A 8B 63 72
+65 64 65 6E  74 69 61 6C  73 86 73 65  63 72 65 74</code></pre>
+</div>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<caption class="title">Table 1. Initialize message parameters</caption>
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Parameter</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clientName</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A name and version for the client, if the user has allowed usage data collection, this is used to track popular clients. Example: "MyClient/1.0"</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">authToken</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">An authorization token used to authenticate to the database. The token must contain either just the entry { "scheme" : "none" } or the keys scheme, principal, and credentials. Example { "scheme": "basic", "principal": "user", "credentials": "secret"}". If no scheme is provided, it defaults to "none".</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="message-run"><a class="anchor" href="#message-run"></a>RUN</h4>
+<div class="paragraph">
+<p>The <code>RUN</code> message is a client message used to pass a statement for execution on the server. It has the following structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_request_message_struct">RunMessage (signature=0x10) {
+    String             statement
+    Map&lt;String,Value&gt;  parameters
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The content and format of the statement string is dependent on the server, and the Bolt Protocol makes no assumption about this.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>On receipt of a <code>RUN</code> message, the server will start a new job by executing the statement with the parameters supplied.
+If successful, the subsequent response will consist of a single <code>SUCCESS</code> message; if not, a <code>FAILURE</code> response will be sent instead.
+A successful job will always produce a result stream which must then be explicitly consumed (via <code>PULL_ALL</code> or <code>DISCARD_ALL</code>), even if empty.</p>
+</div>
+<div class="paragraph">
+<p>Depending on the statement you are executing, additional metadata may be returned in both the <code>SUCCESS</code> message from the <code>RUN</code>, as well as in the final <code>SUCCESS</code> after the stream has been consumed.
+It is up to the statement you are running to determine what meta data to return.
+Notably, most queries will contain a 'fields' metadata section in the <code>SUCCESS</code> message for the <code>RUN</code> statement, which lists the result record field names, and a <code>result_available_after</code> section measuring the number of milliseconds it took for the results to be available for consumption.
+We list further examples of meta data in the <a href="#examples">examples section</a>.</p>
+</div>
+<div class="paragraph">
+<p>In the case where a previous result stream has not yet been fully consumed, an attempt to <code>RUN</code> a new job will trigger a <code>FAILURE</code> response.</p>
+</div>
+<div class="paragraph">
+<p>If an unacknowledged failure is pending from a previous exchange, the server will immediately respond with a single
+<code>IGNORED</code> message and take no further action.</p>
+</div>
+<div class="ulist">
+<div class="title">Response</div>
+<ul>
+<li>
+<p><code>SUCCESS {"fields": &#8230;&#8203;, "result_available_after"}</code> if the statement has been accepted for execution</p>
+</li>
+<li>
+<p><code>FAILURE {"code": &#8230;&#8203;, "message": &#8230;&#8203;}</code> if the request was malformed or if a statement may not be executed at this time</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_type">Value: RUN &quot;RETURN 1 AS num&quot; {}
+
+B2 10 8F 52  45 54 55 52  4E 20 31 20  41 53 20 6E  75 6D A0</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="message-discard-all"><a class="anchor" href="#message-discard-all"></a>DISCARD_ALL</h4>
+<div class="paragraph">
+<p>The <code>DISCARD_ALL</code> message is a client message used to discard all remaining items from the active result
+stream. It has the following structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_request_message_struct">DiscardAllMessage (signature=0x2F) {
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>On receipt of a <code>DISCARD_ALL</code> message, the server will dispose of all remaining items from the active result stream, close the stream and send a single <code>SUCCESS</code> message to the client.
+If no result stream is currently active, the server will respond with a single <code>FAILURE</code> message.</p>
+</div>
+<div class="paragraph">
+<p>If an unacknowledged failure is pending from a previous exchange, the server will immediately respond with a single <code>IGNORED</code> message and take no further action.</p>
+</div>
+<div class="ulist">
+<div class="title">Response</div>
+<ul>
+<li>
+<p><code>SUCCESS {}</code> if the result stream has been successfully discarded</p>
+</li>
+<li>
+<p><code>FAILURE {"code": &#8230;&#8203;, "message": &#8230;&#8203;}</code> if no result stream is currently available</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_type">Value: DISCARD_ALL
+
+B0 2F</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="message-pull-all"><a class="anchor" href="#message-pull-all"></a>PULL_ALL</h4>
+<div class="paragraph">
+<p>The <code>PULL_ALL</code> message is a client message used to retrieve all remaining items from the active result stream.
+It has the following structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_request_message_struct">PullAllMessage (signature=0x3F) {
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>On receipt of a <code>PULL_ALL</code> message, the server will send all remaining result data items to the client, each in a single <code>RECORD</code> message.
+The server will then close the stream and send a single <code>SUCCESS</code> message optionally containing summary information on the data items sent.
+If an error is encountered, the server must instead send a <code>FAILURE</code> message, discard all remaining data items and close the stream.</p>
+</div>
+<div class="paragraph">
+<p>If an unacknowledged failure is pending from a previous exchange, the server will immediately respond with a single <code>IGNORED</code> message and take no further action.</p>
+</div>
+<div class="ulist">
+<div class="title">Response</div>
+<ul>
+<li>
+<p><code>SUCCESS {&#8230;&#8203;}</code> if the result stream has been successfully transferred</p>
+</li>
+<li>
+<p><code>FAILURE {"code": &#8230;&#8203;, "message": &#8230;&#8203;}</code> if no result stream is currently available or if retrieval fails</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_type">Value: PULL_ALL
+
+B0 3F</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="message-ack-failure"><a class="anchor" href="#message-ack-failure"></a>ACK_FAILURE</h4>
+<div class="paragraph">
+<p>The <code>ACK_FAILURE</code> message is a client message used to acknowledge a failure the server has sent.</p>
+</div>
+<div class="paragraph">
+<p>The following actions are performed by <code>ACK_FAILURE</code>:</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In some cases, it may be preferable to use <code>RESET</code> after a failure, to clear
+the entire state of the connection.
+</td>
+</tr>
+</table>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>clear any outstanding <code>FAILURE</code> state</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See <a href="#examples-ack-failure">[examples-ack-failure]</a> for an example.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_request_message_struct">AckFailureMessage (signature=0x0E) {
+}</code></pre>
+</div>
+</div>
+<div class="ulist">
+<div class="title">Response</div>
+<ul>
+<li>
+<p><code>SUCCESS {}</code> if the session was successfully reset</p>
+</li>
+<li>
+<p><code>FAILURE {"code": &#8230;&#8203;, "message": &#8230;&#8203;}</code> if there is no failure waiting to be cleared</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_type">Value: ACK_FAILURE
+
+B0 0E</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="message-reset"><a class="anchor" href="#message-reset"></a>RESET</h4>
+<div class="paragraph">
+<p>The <code>RESET</code> message is a client message used to return the current session to a "clean" state.
+It will cause the session to <code>IGNORE</code> any message it is currently processing, as well as any message before <code>RESET</code> that had not yet begun processing.
+This allows <code>RESET</code> to abort long-running operations.
+It also means clients must be careful about pipelining <code>RESET</code>.
+Only send this if you are not currently waiting for a result from a prior message, or if you want to explicitly abort any prior message.</p>
+</div>
+<div class="paragraph">
+<p>The following actions are performed by <code>RESET</code>:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>force any currently processing message to abort with <code>IGNORE</code></p>
+</li>
+<li>
+<p>force any pending messages that have not yet started processing to be <code>IGNORED</code></p>
+</li>
+<li>
+<p>clear any outstanding <code>FAILURE</code> state</p>
+</li>
+<li>
+<p>dispose of any outstanding result records</p>
+</li>
+<li>
+<p>rollback the current transaction (if any)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>See <a href="#examples-reset">[examples-reset]</a> for example usage.</p>
+</div>
+<div class="paragraph">
+<p>Also, see <a href="#message-ack-failure">ACK_FAILURE</a> for a message that only clears <code>FAILURE</code> state</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_request_message_struct">ResetMessage (signature=0x0F) {
+}</code></pre>
+</div>
+</div>
+<div class="ulist">
+<div class="title">Response</div>
+<ul>
+<li>
+<p><code>SUCCESS {}</code> if the session was successfully reset</p>
+</li>
+<li>
+<p><code>FAILURE {"code": &#8230;&#8203;, "message": &#8230;&#8203;}</code> if a reset is not currently possible</p>
+</li>
+</ul>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_type">Value: RESET
+
+B0 0F</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="message-record"><a class="anchor" href="#message-record"></a>RECORD</h4>
+<div class="paragraph">
+<p>The <code>RECORD</code> message is a server detail message used to deliver data from the server to the client.
+Each record message contains a single List, which in turn contains the fields of the record in order.
+It has the following structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_response_message_struct">RecordMessage (signature=0x71) {
+    List&lt;Value&gt; fields
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_type">Value: RECORD [1,2,3]
+
+B1 71 93 01  02 03</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="message-success"><a class="anchor" href="#message-success"></a>SUCCESS</h4>
+<div class="paragraph">
+<p>The <code>SUCCESS</code> message is a server summary message used to signal that a corresponding client message has been received and actioned as intended.
+The message contains a map of metadata, the contents of which depend on the original request.
+It has the following structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_response_message_struct">SuccessMessage (signature=0x70) {
+    Map&lt;String,Value&gt; metadata
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_type">Value: SUCCESS { &quot;fields&quot;: [&quot;name&quot;, &quot;age&quot;]}
+
+B1 70 A1 86  66 69 65 6C  64 73 92 84  6E 61 6D 65
+83 61 67 65</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="message-failure"><a class="anchor" href="#message-failure"></a>FAILURE</h4>
+<div class="paragraph">
+<p>The <code>FAILURE</code> message is a server summary message used to signal that a corresponding client message has encountered an error while being processed.
+It has the following structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_response_message_struct">FailureMessage (signature=0x7F) {
+    Map&lt;String,Value&gt; metadata
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>FAILURE</code> messages contain metadata providing details regarding the primary failure that has occurred.
+This metadata is a simple map containing a code and a message.</p>
+</div>
+<div class="paragraph">
+<p>When a <code>FAILURE</code> occurs, in most cases any open transaction will be rolled back.
+However, if the <code>FAILURE</code> is classified as a <code>client error</code>, the transaction will be left open and can be used again
+after the <code>FAILURE</code> has been acknowledged.
+This is mainly to support user-driven queries, where a database administrator may have built up a large transaction, and
+we do not want a simple spelling mistake to roll it all back.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_type">Value: FAILURE { &quot;code&quot;: &quot;Neo.ClientError.Statement.SyntaxError&quot;, &quot;message&quot;: &quot;Invalid syntax.&quot; }
+
+B1 7F A2 84  63 6F 64 65  D0 25 4E 65  6F 2E 43 6C
+69 65 6E 74  45 72 72 6F  72 2E 53 74  61 74 65 6D
+65 6E 74 2E  53 79 6E 74  61 78 45 72  72 6F 72 87
+6D 65 73 73  61 67 65 8F  49 6E 76 61  6C 69 64 20
+73 79 6E 74  61 78 2E</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="message-ignored"><a class="anchor" href="#message-ignored"></a>IGNORED</h4>
+<div class="paragraph">
+<p>The <code>IGNORED</code> message is a server summary message used to signal that a corresponding client message has been ignored and not actioned.
+It has the following structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_response_message_struct">IgnoredMessage (signature=0x7E) {
+    Map&lt;String,Value&gt;  metadata
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A client message will be ignored if an earlier failure has not yet been acknowledged by the client via a <code>RESET</code> message.
+For example, this will occur if the client optimistically sends a group of messages, one of which fails during execution: all subsequent messages in that group will then be ignored.
+Note that the original <code>PULL_ALL</code> message was never processed by the server.</p>
+</div>
+<div class="listingblock">
+<div class="title">Example</div>
+<div class="content">
+<pre class="CodeRay highlight"><code data-lang="bolt_type">Value: IGNORED
+
+B0 7E</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+    </div>
+  </div>
+</section>
+
+<footer class="row">
+  <div class="large-12 columns">
+    <hr/>
+    <div class="row">
+      <div class="large-12 columns">
+        <p>Licensed under <a href="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons 3.0 Attribution-ShareAlike</a>.</p>
+        <p><a href="https://github.com/neo4j/neo4j/tree/3.0.6/manual/bolt/src/docs/dev">Originally authored</a> by <a href="https://neo4j.com">Neo Technology, Inc.</a>, with modifications to original source for publishing and clarity.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="/js/vendor/jquery.js"></script>
+<script src="/js/foundation.min.js"></script>
+<script>
+  $(document).foundation();
+</script>
+<script src="/js/vendor/jquery.js"></script>
+<script src="/js/foundation/foundation.js"></script>
+<script>
+  $(document).foundation();
+  var doc = document.documentElement;
+  doc.setAttribute('data-useragent', navigator.userAgent);
+</script>
+</body>
+</html>
