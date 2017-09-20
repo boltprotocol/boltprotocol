@@ -16,7 +16,6 @@ For details on the layout and meaning of specific messages, see <<messaging>>.
 |<<ints,Integer>>                |64-bit signed integer
 |<<floats,Float>>                |64-bit floating point number
 |<<strings,String>>              |UTF-8 encoded strings
-|<<bytes,Bytes>>                 |A sequence of bytes
 |<<lists,List>>                  |Ordered collection of values
 |<<maps,Map>>                    |Unordered, keyed collection of values
 |<<node-structure,Node>>            |A node in the graph with optional properties and labels
@@ -216,37 +215,6 @@ Value: "En å flöt över ängen"
 
 D0 18 45 6E  20 C3 A5 20  66 6C C3 B6  74 20 C3 B6
 76 65 72 20  C3 A4 6E 67  65 6E
-----
-
-[[bytes]]
-=== Bytes
-A sequence of bytes is preceeded by a length, using either 8, 16 or 32 bits
-depending on the length of the sequence. The marker `0xD0`, `0xD1` or `0xD2`
-should be used, depending on scale. This marker is followed by the size and
-then the bytes as in the example below:
-
-// TODO: Convert this to a code-segment that can be tested
-image:images/packstream-bytes.png[]
-
-.Bytes markers
-[cols="^20,<50,<30",options="header",name="bytes-marker-table"]
-|=======================
-|Marker         |Size                                        |Maximum data size
-|`0xCC`         |8-bit unsigned integer                      |255 bytes
-|`0xCD`         |16-bit big-endian unsigned integer          |65 535 bytes
-|`0xCE`         |32-bit big-endian unsigned integer          |4 294 967 295 bytes
-|=======================
-
-[[bytes-examples]]
-==== Examples
-
-.Bytes sequence
-[source,bolt_type]
-----
-Value: #6162636465666768696a6b6c6d6e6f707172737475767778797a
-
-CC 1A 61 62  63 64 65 66  67 68 69 6A  6B 6C 6D 6E
-6F 70 71 72  73 74 75 76  77 78 79 7A
 ----
 
 [[lists]]
