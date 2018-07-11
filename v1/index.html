@@ -427,7 +427,7 @@ Sending any message other than <code>INIT</code> as the first message to the ser
 <div class="content">
 <pre class="CodeRay highlight"><code data-lang="bolt_type">Value: INIT &quot;MyClient/1.0&quot; { &quot;scheme&quot;: &quot;basic&quot;, &quot;principal&quot;: &quot;neo4j&quot;, &quot;credentials&quot;: &quot;secret&quot;}
 
-B1 01 8C 4D  79 43 6C 69  65 6E 74 2F  31 2E 30 A3
+B2 01 8C 4D  79 43 6C 69  65 6E 74 2F  31 2E 30 A3
 86 73 63 68  65 6D 65 85  62 61 73 69  63 89 70 72
 69 6E 63 69  70 61 6C 85  6E 65 6F 34  6A 8B 63 72
 65 64 65 6E  74 69 61 6C  73 86 73 65  63 72 65 74</code></pre>
@@ -1907,7 +1907,7 @@ Server: 00 00 00 01
 
 Client: INIT &quot;MyClient/1.0&quot; { &quot;scheme&quot;: &quot;basic&quot;, &quot;principal&quot;: &quot;neo4j&quot;, &quot;credentials&quot;: &quot;secret&quot;}
 
-  00 40 B1 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
+  00 40 B2 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
   30 A3 86 73  63 68 65 6D  65 85 62 61  73 69 63 89
   70 72 69 6E  63 69 70 61  6C 85 6E 65  6F 34 6A 8B
   63 72 65 64  65 6E 74 69  61 6C 73 86  73 65 63 72
@@ -1965,7 +1965,7 @@ Server: 00 00 00 01
 
 Client: INIT &quot;MyClient/1.0&quot; { &quot;scheme&quot;: &quot;basic&quot;, &quot;principal&quot;: &quot;neo4j&quot;, &quot;credentials&quot;: &quot;secret&quot;}
 
-  00 40 B1 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
+  00 40 B2 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
   30 A3 86 73  63 68 65 6D  65 85 62 61  73 69 63 89
   70 72 69 6E  63 69 70 61  6C 85 6E 65  6F 34 6A 8B
   63 72 65 64  65 6E 74 69  61 6C 73 86  73 65 63 72
@@ -2046,7 +2046,7 @@ Server: 00 00 00 01
 
 Client: INIT &quot;MyClient/1.0&quot; { &quot;scheme&quot;: &quot;basic&quot;, &quot;principal&quot;: &quot;neo4j&quot;, &quot;credentials&quot;: &quot;secret&quot;}
 
-  00 40 B1 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
+  00 40 B2 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
   30 A3 86 73  63 68 65 6D  65 85 62 61  73 69 63 89
   70 72 69 6E  63 69 70 61  6C 85 6E 65  6F 34 6A 8B
   63 72 65 64  65 6E 74 69  61 6C 73 86  73 65 63 72
@@ -2139,7 +2139,7 @@ Server: 00 00 00 01
 
 Client: INIT &quot;MyClient/1.0&quot; { &quot;scheme&quot;: &quot;basic&quot;, &quot;principal&quot;: &quot;neo4j&quot;, &quot;credentials&quot;: &quot;secret&quot;}
 
-  00 40 B1 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
+  00 40 B2 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
   30 A3 86 73  63 68 65 6D  65 85 62 61  73 69 63 89
   70 72 69 6E  63 69 70 61  6C 85 6E 65  6F 34 6A 8B
   63 72 65 64  65 6E 74 69  61 6C 73 86  73 65 63 72
@@ -2247,7 +2247,7 @@ Server: 00 00 00 01
 
 Client: INIT &quot;MyClient/1.0&quot; { &quot;scheme&quot;: &quot;basic&quot;, &quot;principal&quot;: &quot;neo4j&quot;, &quot;credentials&quot;: &quot;secret&quot;}
 
-  00 40 B1 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
+  00 40 B2 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
   30 A3 86 73  63 68 65 6D  65 85 62 61  73 69 63 89
   70 72 69 6E  63 69 70 61  6C 85 6E 65  6F 34 6A 8B
   63 72 65 64  65 6E 74 69  61 6C 73 86  73 65 63 72
@@ -2331,7 +2331,7 @@ Server: 00 00 00 01
 
 Client: INIT &quot;MyClient/1.0&quot; { &quot;scheme&quot;: &quot;basic&quot;, &quot;principal&quot;: &quot;neo4j&quot;, &quot;credentials&quot;: &quot;secret&quot;}
 
-  00 40 B1 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
+  00 40 B2 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
   30 A3 86 73  63 68 65 6D  65 85 62 61  73 69 63 89
   70 72 69 6E  63 69 70 61  6C 85 6E 65  6F 34 6A 8B
   63 72 65 64  65 6E 74 69  61 6C 73 86  73 65 63 72
@@ -2515,7 +2515,7 @@ Server: 00 00 00 01
 
 Client: INIT &quot;MyClient/1.0&quot; { &quot;scheme&quot;: &quot;basic&quot;, &quot;principal&quot;: &quot;neo4j&quot;, &quot;credentials&quot;: &quot;secret&quot;}
 
-  00 40 B1 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
+  00 40 B2 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
   30 A3 86 73  63 68 65 6D  65 85 62 61  73 69 63 89
   70 72 69 6E  63 69 70 61  6C 85 6E 65  6F 34 6A 8B
   63 72 65 64  65 6E 74 69  61 6C 73 86  73 65 63 72
@@ -2676,7 +2676,7 @@ Server: 00 00 00 01
 
 Client: INIT &quot;MyClient/1.0&quot; { &quot;scheme&quot;: &quot;basic&quot;, &quot;principal&quot;: &quot;neo4j&quot;, &quot;credentials&quot;: &quot;secret&quot;}
 
-  00 40 B1 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
+  00 40 B2 01  8C 4D 79 43  6C 69 65 6E  74 2F 31 2E
   30 A3 86 73  63 68 65 6D  65 85 62 61  73 69 63 89
   70 72 69 6E  63 69 70 61  6C 85 6E 65  6F 34 6A 8B
   63 72 65 64  65 6E 74 69  61 6C 73 86  73 65 63 72
