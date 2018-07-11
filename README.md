@@ -16,6 +16,8 @@ Bolt is a non-standardized open source protocol and contributions are
 encouraged. Contributions to this website and the documentation can be made in
 this repository, either as pull requests or issues.
 
+For discussion on the bolt protocol, please join the [mailing list](https://groups.google.com/d/forum/boltprotocol) at https://groups.google.com/d/forum/boltprotocol.
+
 License
 -------
 

@@ -19,6 +19,15 @@ and was originally authored by the team behind the https://neo4j.com[Neo4j graph
 
 The current version is link:v1/[Protocol Version 1].
 
+== Contributing
+
+Bolt is a non-standardized open source protocol and contributions are encouraged.
+
+For discussion of the Bolt protocol, please join the https://groups.google.com/d/forum/boltprotocol[Mailing list].
+
+Contributions to this website and the documentation can be made via the
+https://github.com/boltprotocol/boltprotocol.org[GitHub project].
+
 == Connection
 
 All versions of the Bolt Protocol operate over a TCP connection or WebSocket,
@@ -28,13 +37,6 @@ with an optional TLS encapsulation. The recommended default port is 7687.
 
 All connections will begin with protocol version negotiation, described in the
 link:v1/#handshake[handshake documentation].
-
-== Contributing
-
-Bolt is a non-standardized open source protocol and contributions are encouraged.
-
-Contributions to this website and the documentation can be made via the
-https://github.com/boltprotocol/boltprotocol.org[GitHub project].
 
 == Implementations
 
