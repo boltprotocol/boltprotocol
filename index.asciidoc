@@ -105,6 +105,10 @@ This is a non-exhaustive list of known implementations:
 |https://github.com/florinpatrascu/bolt_sips[bolt-sips]
 |Elixir driver library
 |link:v1/[Version 1]
+
+|https://github.com/zmactep/hasbolt[hasbolt]
+|Haskell driver library
+|link:v1/[Version 1]
 |===
 
 === Servers
