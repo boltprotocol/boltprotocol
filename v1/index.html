@@ -433,7 +433,7 @@ B2 01 8C 4D  79 43 6C 69  65 6E 74 2F  31 2E 30 A3
 65 64 65 6E  74 69 61 6C  73 86 73 65  63 72 65 74</code></pre>
 </div>
 </div>
-<table class="tableblock frame-all grid-all spread">
+<table class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 1. Initialize message parameters</caption>
 <colgroup>
 <col style="width: 20%;">
@@ -843,7 +843,7 @@ B0 7E</code></pre>
 <div class="paragraph">
 <p>For details on the layout and meaning of specific messages, see <a href="#messaging">Messaging layer</a>.</p>
 </div>
-<table id="type-system-mapping" class="tableblock frame-all grid-all spread">
+<table id="type-system-mapping" class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 2. Types overview</caption>
 <colgroup>
 <col style="width: 20%;">
@@ -1018,7 +1018,7 @@ CB 80 00 00  00 00 00 00  00</code></pre>
 CB 7F FF FF  FF FF FF FF  FF</code></pre>
 </div>
 </div>
-<table class="tableblock frame-all grid-all spread">
+<table class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 3. Suggested integer representations</caption>
 <colgroup>
 <col style="width: 33.3333%;">
@@ -1114,7 +1114,7 @@ C1 BF F1 99 99 99 99 99 9A</code></pre>
 <p>String data is represented as UTF-8 encoded binary data.
 Note that sizes used for string are the byte counts of the UTF-8 encoded data, not the character count of the original string.</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
+<table class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 4. String markers</caption>
 <colgroup>
 <col style="width: 20%;">
@@ -1209,7 +1209,7 @@ D0 18 45 6E  20 C3 A5 20  66 6C C3 B6  74 20 C3 B6
 The size of a list denotes the number of items within that list, not the total packed byte size.
 The markers used to denote a list are described in the table below:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
+<table class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 5. List markers</caption>
 <colgroup>
 <col style="width: 20%;">
@@ -1298,7 +1298,7 @@ Keys are unique within a map, however the serialization format notably technical
 Though if duplicate keys are sent, this is a violation of the bolt protocol and an error will occur.
 The markers used to denote a map are described in the table below:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
+<table class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 6. Map markers</caption>
 <colgroup>
 <col style="width: 20%;">
@@ -1387,7 +1387,7 @@ D8 10 81 61  01 81 62 01  81 63 03 81  64 04 81 65
 The size of a structure is measured as the number of fields, not the total packed byte size.
 The markers used to denote a structure are described in the table below:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
+<table class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 7. Structure markers</caption>
 <colgroup>
 <col style="width: 20%;">
@@ -1676,7 +1676,7 @@ The general serialised structure is as follows:</p>
 <div class="paragraph">
 <p>These are all the marker bytes:</p>
 </div>
-<table id="markers" class="tableblock frame-all grid-all spread">
+<table id="markers" class="tableblock frame-all grid-all stretch">
 <caption class="title">Table 8. Marker table</caption>
 <colgroup>
 <col style="width: 15%;">
