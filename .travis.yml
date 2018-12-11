@@ -1,6 +1,6 @@
 language: ruby
 rvm:
-- 2.2.0
+- 2.5.3
 sudo: false
 script: bundle exec rake deploy
 env:
