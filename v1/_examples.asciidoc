@@ -230,7 +230,7 @@ Server: SUCCESS { "fields": ["num"], "result_available_after": 12 }
 
 This illustrates how to handle errors with `ACK_FAILURE`.
 `ACK_FAILURE` will not roll back transactions or interrupt messages ahead in line.
-Instead, it only clears the error state and moves the session either to `IDLE` or to `IN_TRANSCATION`.
+Instead, it only clears the error state and moves the session either to `IDLE` or to `IN_TRANSACTION`.
 
 This is helpful, because it means you always have to run "ROLLBACK" to roll back an open transaction.
 For some use cases, that helps minimize complexity, because it cuts down the number of error recovery paths.
