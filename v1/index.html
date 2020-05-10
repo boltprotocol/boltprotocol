@@ -196,7 +196,7 @@ If TLS is enabled, and no certificate has been specified, the server should auto
 This handshake is a <em>version-independent</em> mini-protocol which is guaranteed to remain the same, regardless of preferred or available protocol versions.</p>
 </div>
 <div class="paragraph">
-<p>In the handshake, the client fist sends a magic four byte preamble (6060 B017) followed by four protocol versions it supports, in order of preference.
+<p>In the handshake, the client first sends a magic four byte preamble (6060 B017) followed by four protocol versions it supports, in order of preference.
 The proposal is always represented as four 32-bit unsigned integers.
 Each integer represents a proposed protocol version to use, or zero (<code>00 00 00 00</code>) for "none".</p>
 </div>
